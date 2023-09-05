@@ -1,5 +1,6 @@
 import json
 import os.path
+from datetime import datetime
 
 
 def load_transactions(path):
@@ -16,32 +17,51 @@ def load_transactions(path):
         return data
 
 
-
-def get_sorted_id(data):
+def get_last_operations(data):
     """
 
     :param data:
     :return:
     """
-    pass
+    date_list = []
+    last_operations = []
+    for operation in data:
+        if len(operation) == 7:
+            continue
+        if operation["state"] == "EXECUTED":
+            date_list.append(operation["date"])
+
+    date_list.sort(reverse=True)
+
+    for date in date_list[:5]:
+        for operation in data:
+            if len(operation) == 7:
+                continue
+            if operation["date"] == date:
+                last_operations.append(operation)
+
+    return last_operations
 
 
-def masking_card(card_number):
+def masking(card_number):
     """
 
     :param card_number:
     :return:
     """
-    pass
+    splited_number = card_number.split()
 
+    if splited_number[0] == 'Счет':
+        second_part = f' **{splited_number[1][-5:-1]}'
+    else:
+        second_part = f'{splited_number[-1][:4]} {splited_number[-1][4:6]}** **** {splited_number[-1][-5:-1]}'
 
-def masking_account(account_number):
-    """
+    if len(splited_number) == 3:
+        first_part = f'{splited_number[0]} {splited_number[1]}'
+    else:
+        first_part = splited_number[0]
 
-    :param account_number:
-    :return:
-    """
-    pass
+    return(f'{first_part} {second_part}')
 
 
 def format_date(date):
@@ -50,13 +70,21 @@ def format_date(date):
     :param date:
     :return:
     """
-    pass
+    date = '2019-02-08T09:09:35.038506'
+    date_time = datetime.strptime(date, "%Y-%m-%dT%H:%M:%S.%f")
+    return date_time.strftime('%d.%m.%Y')
 
 
-def print_result(data, id_last):
+def print_result(last_operations):
     """
 
     :param data:
     :return:
     """
-    pass
+    for operation in last_operations:
+        print(f'{format_date(operation["date"])} {operation["description"]}')
+        if operation["description"] == 'Открытие вклада':
+            print(f'{masking(operation["to"])}')
+        else:
+            print(f'{masking(operation["from"])} -> {masking(operation["to"])}')
+        print(f'{operation["operationAmount"]["amount"]} {operation["operationAmount"]["currency"]["name"]}')
