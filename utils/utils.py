@@ -19,14 +19,19 @@ def load_transactions(path):
 
 def get_last_operations(data):
     """
-
-    :param data:
-    :return:
+    Returns last 5 executed operations from data set in .json format, ignores empty data sets.
+    If data set isn`t list returns False
+    :param data: data set in .json format
+    :return last_operations: list of last 5 operations sorted by data
     """
+    if not type(data) == list:
+        return False
+
     date_list = []
     last_operations = []
+
     for operation in data:
-        if len(operation) == 7:
+        if len(operation) == 0:
             continue
         if operation["state"] == "EXECUTED":
             date_list.append(operation["date"])
@@ -35,7 +40,7 @@ def get_last_operations(data):
 
     for date in date_list[:5]:
         for operation in data:
-            if len(operation) == 7:
+            if len(operation) == 0:
                 continue
             if operation["date"] == date:
                 last_operations.append(operation)
@@ -45,9 +50,11 @@ def get_last_operations(data):
 
 def masking(card_number):
     """
-
-    :param card_number:
-    :return:
+    Masking card number in format "card name first 6 digits ** **** last 4 digits" or
+    masking account number in format "Account **last 4 digits"
+    :param card_number: Name and number of card or account in format "Name card_number(16 digits no spaces)"
+    or "Name account_number(no spaces)"
+    :return: string with masked card or account number
     """
     splited_number = card_number.split()
 
@@ -61,30 +68,37 @@ def masking(card_number):
     else:
         first_part = splited_number[0]
 
-    return(f'{first_part} {second_part}')
+    return f'{first_part} {second_part}'
 
 
 def format_date(date):
     """
-
-    :param date:
-    :return:
+    Formats date as "DD.MM.YYYY"
+    :param date: date in format "YYYY-MM-DD T HH:mm:ss.ms"
+    :return: String with date in format "DD.MM.YYYY"
     """
-    date = '2019-02-08T09:09:35.038506'
     date_time = datetime.strptime(date, "%Y-%m-%dT%H:%M:%S.%f")
     return date_time.strftime('%d.%m.%Y')
 
 
-def print_result(last_operations):
+def print_result(operation):
     """
-
-    :param data:
-    :return:
+    Formats an output massage as
+    "14.10.2018 Перевод организации
+    Visa Platinum 7000 79** **** 6361 -> Счет **9638
+    82771.72 руб."
+    In case of deposit opening formats output massage as
+    "14.10.2018 Открытие вклада
+    Счет **9638
+    82771.72 руб."
+    :param operation: information about operation in project format
+    :return: string in requested format
     """
-    for operation in last_operations:
-        print(f'{format_date(operation["date"])} {operation["description"]}')
-        if operation["description"] == 'Открытие вклада':
-            print(f'{masking(operation["to"])}')
-        else:
-            print(f'{masking(operation["from"])} -> {masking(operation["to"])}')
-        print(f'{operation["operationAmount"]["amount"]} {operation["operationAmount"]["currency"]["name"]}')
+    output = ''
+    output += f'{format_date(operation["date"])} {operation["description"]}\n'
+    if operation["description"] == 'Открытие вклада':
+        output += f'{masking(operation["to"])}\n'
+    else:
+        output += f'{masking(operation["from"])} -> {masking(operation["to"])}\n'
+    output += f'{operation["operationAmount"]["amount"]} {operation["operationAmount"]["currency"]["name"]}'
+    return output
