@@ -10,7 +10,7 @@ def load_transactions(path):
     :return data from .json file or none if file does not exist
     """
     if not os.path.exists(path):
-        return None
+        return False
 
     with open(path, encoding='utf-8') as file:
         data = json.load(file)
@@ -59,9 +59,9 @@ def masking(card_number):
     splited_number = card_number.split()
 
     if splited_number[0] == 'Счет':
-        second_part = f' **{splited_number[1][-5:-1]}'
+        second_part = f'**{splited_number[1][-4:]}'
     else:
-        second_part = f'{splited_number[-1][:4]} {splited_number[-1][4:6]}** **** {splited_number[-1][-5:-1]}'
+        second_part = f'{splited_number[-1][:4]} {splited_number[-1][4:6]}** **** {splited_number[-1][-4:]}'
 
     if len(splited_number) == 3:
         first_part = f'{splited_number[0]} {splited_number[1]}'
